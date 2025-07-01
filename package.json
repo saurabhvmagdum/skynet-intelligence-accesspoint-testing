@@ -1,0 +1,35 @@
+{
+  "name": "access-points-sync",
+  "version": "1.0.0",
+  "description": "Sync access points data between Supabase and Pinecone",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/src/dataSyncManager.js",
+    "dev": "ts-node src/dataSyncManager.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "supabase",
+    "pinecone",
+    "vector-database",
+    "sync",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@pinecone-database/pinecone": "^5.1.1",
+    "@supabase/supabase-js": "^2.38.0",
+    "dotenv": "^16.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "cross-env": "^7.0.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

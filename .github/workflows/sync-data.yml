@@ -1,0 +1,118 @@
+# .github/workflows/sync-data.yml
+
+name: Sync Access Points Data
+
+on:
+  # Trigger manually
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Operation to perform'
+        required: true
+        default: 'health-check'
+        type: choice
+        options:
+          - 'health-check'
+          - 'sync-initial'
+          - 'sync-supabase-to-pinecone'
+  
+  # Trigger on push to main when relevant files are modified
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/accesspoint.ts'
+      - 'src/dataSyncManager.ts'
+      - 'src/pineconeOperations.ts'
+      - 'src/supabaseOperations.ts'
+
+
+jobs:
+  sync-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build TypeScript
+      run: npm run build
+    
+    - name: Validate Environment Variables
+      shell: bash
+      run: |
+        echo "Validating required environment variables..."
+        if [ -z "${{ secrets.DATABASE_URL }}" ]; then
+          echo "DATABASE_URL is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.SUPABASE_KEY }}" ]; then
+          echo "SUPABASE_KEY is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.PINECONE_API_KEY }}" ]; then
+          echo "PINECONE_API_KEY is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.PINECONE_INDEX_NAME }}" ]; then
+          echo "PINECONE_INDEX_NAME is not set"
+          exit 1
+        fi
+        echo "All required environment variables are set"
+    
+    - name: Run Health Check
+      if: github.event.inputs.operation == 'health-check' || github.event_name == 'schedule'
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+        PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: ts-node src/dataSyncManager.ts
+    
+    - name: Sync Data
+      if: github.event.inputs.operation == 'sync-initial' || github.event.inputs.operation == 'sync-supabase-to-pinecone' || github.event_name == 'push'
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+        PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: ts-node src/dataSyncManager.ts
+    
+    - name: Get current date
+      if: failure()
+      id: date
+      run: echo "date=$(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+      
+    - name: Notify on Failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const operation = context.payload.inputs?.operation || 'scheduled sync';
+          const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+          
+          const issueBody = `## Data Sync Failure
+
+          Operation: "${operation}"
+          Triggered by: ${context.actor}
+          Workflow Run: [View Logs](${runUrl})
+          Time: ${{ steps.date.outputs.date }}
+
+          ## Please check the logs for more details and ensure all environment variables are properly configured.`;
+
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `Data Sync Failed: ${operation}`,
+            body: issueBody
+          });
