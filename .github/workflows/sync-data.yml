@@ -48,7 +48,10 @@ jobs:
 
     - name: Build TypeScript
       run: npm run build
-    
+      
+    - name: Install ts-node
+      run: npm install -g ts-node
+
     - name: Validate Environment Variables
       shell: bash
       run: |
