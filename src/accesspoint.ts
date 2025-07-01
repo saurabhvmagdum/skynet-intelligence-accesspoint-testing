@@ -87,6 +87,23 @@ export const accessPointsData: AccessPoint[] = [
     fileUpload: false,
     fileDownload: false,
     subnetURL: "https://runpodservice-c0n1.stackos.io/natural-request",
+  },
+   {
+    id: "subnet-accesspoint",
+    subnetID: "24",
+    subnetName: "runpod",
+    description: "This is for creating and managing image instances",
+    input: "Only prompt",
+    output: "Pod details",
+    inputType: "text",
+    outputType: "json",
+    capabilities: ["manage-pod", "create-pod"],
+    tags: ["runpod", "pod", "management"],
+    promptExample:
+      "Create a new pod name: 'RunPod Tensorflow' imageName: 'runpod/pytorch' ports: 8888/http volume: /workspace",
+    fileUpload: false,
+    fileDownload: false,
+    subnetURL: "https://runpodservice-c0n1.stackos.io/natural-request",
   }
 
   // Add more access points here...
