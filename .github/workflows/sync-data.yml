@@ -1,4 +1,5 @@
 # .github/workflows/sync-data.yml
+# GitHub Actions workflow for syncing data between Supabase and Pinecone
 
 name: Sync Access Points Data
 
