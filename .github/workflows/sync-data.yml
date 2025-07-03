@@ -26,12 +26,7 @@ on:
       - 'src/supabaseOperations.ts'
   
   pull_request:
-    branches: main
-    paths:
-      - 'src/accesspoint.ts'
-      - 'src/dataSyncManager.ts'
-      - 'src/pineconeOperations.ts'
-      - 'src/supabaseOperations.ts'
+    branches: [ main ]
     
 
 
