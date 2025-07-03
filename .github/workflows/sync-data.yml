@@ -56,10 +56,10 @@ jobs:
         curl -sSfL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar -xz
         sudo mv supabase /usr/local/bin/
 
-    - name: Authenticate with Supabase
-      env:
-        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-      run: supabase login --token $SUPABASE_KEY
+    # - name: Authenticate with Supabase
+    #   env:
+    #     SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+    #   run: supabase login --token $SUPABASE_KEY
 
     - name: Create migration file
       run: |
