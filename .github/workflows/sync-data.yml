@@ -78,7 +78,7 @@ jobs:
         echo "All required environment variables are set"
     
     - name: Run Health Check
-      if: github.event.inputs.operation == 'health-check' || github.event_name == 'schedule'
+      if: github.event.inputs.operation == 'health-check' || github.event_name == 'schedule' || github.event_name == 'pull_request'
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
@@ -88,7 +88,7 @@ jobs:
       run: ts-node src/dataSyncManager.ts
     
     - name: Sync Data
-      if: github.event.inputs.operation == 'sync-only' || github.event_name == 'push'
+      if: github.event.inputs.operation == 'sync-only' || github.event_name == 'push' || github.event_name == 'pull_request'
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
