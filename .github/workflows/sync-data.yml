@@ -62,7 +62,7 @@ jobs:
       run: supabase login --token $SUPABASE_ACCESS_TOKEN
     
     - name: Link Supabase project
-      run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+      run: supabase link --project-ref ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
     - name: Create migration file
       run: |
@@ -210,8 +210,8 @@ jobs:
           echo "✅ PINECONE_INDEX_NAME is set"
         fi
         
-        if [ -z "${{ secrets.SUPABASE_PROJECT_REF }}" ]; then
-          echo "❌ SUPABASE_PROJECT_REF is not set"
+        if [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
+          echo "❌ SUPABASE_ACCESS_TOKEN is not set"
           ERROR_COUNT=$((ERROR_COUNT + 1))
         else
           echo "✅ SUPABASE_PROJECT_REF is set"
@@ -238,7 +238,7 @@ jobs:
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
         PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
-        SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: ts-node src/dataSyncManager.ts
     
@@ -249,7 +249,7 @@ jobs:
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
         PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
-        SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: ts-node src/dataSyncManager.ts
 
