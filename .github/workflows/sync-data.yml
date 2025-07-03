@@ -10,7 +10,7 @@ on:
       operation:
         description: 'Operation to perform'
         required: true
-        default: 'health-check'
+        default: 'sync-only'
         type: choice
         options:
           - 'health-check'
