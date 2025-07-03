@@ -53,8 +53,8 @@ jobs:
       
     - name: Install Supabase CLI
       run: |
-        curl -sSL https://raw.githubusercontent.com/supabase/cli/master/install.sh | sh
-        sudo mv /usr/local/bin/supabase /usr/bin/
+        curl -sSfL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar -xz
+        sudo mv supabase /usr/local/bin/
 
     - name: Authenticate with Supabase
       env:
