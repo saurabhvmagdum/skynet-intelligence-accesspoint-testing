@@ -9,10 +9,10 @@ on:
       operation:
         description: 'Operation to perform'
         required: true
-        default: 'create-table'
+        default: 'sync-access-points'
         type: choice
         options:
-          - 'create-table'
+          - 'sync-access-points'
           - 'health-check'
   
   # Trigger on push to main when relevant files are modified
@@ -30,7 +30,7 @@ on:
       - main
 
 jobs:
-  create-table:
+  sync-access-points:
     runs-on: ubuntu-latest
     
     steps:
