@@ -15,7 +15,7 @@ on:
         options:
           - 'health-check'
           - 'sync-only'
-  
+   
   # Trigger on push to main when relevant files are modified
   push:
     branches: [ main ]
