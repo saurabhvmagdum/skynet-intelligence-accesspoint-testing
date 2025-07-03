@@ -306,7 +306,7 @@ jobs:
           **Time**: ${{ steps.date.outputs.date }}
           
           ## Please check the logs for more details.
-          
+           
           ### Possible causes:
           - Invalid DATABASE_URL format
           - Database connection issues
