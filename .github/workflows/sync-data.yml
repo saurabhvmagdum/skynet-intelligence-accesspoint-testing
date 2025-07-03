@@ -59,7 +59,7 @@ jobs:
     - name: Authenticate with Supabase
       env:
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-      run: supabase login --service-key $SUPABASE_KEY
+      run: supabase login --token $SUPABASE_KEY
 
     - name: Create migration file
       run: |
