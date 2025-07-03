@@ -316,7 +316,7 @@ jobs:
           
           ### DATABASE_URL Format Should Be:
           \`postgresql://username:password@host:port/database\`
-          
+           
           ### Required Permissions:
           - CREATE TABLE
           - CREATE INDEX
