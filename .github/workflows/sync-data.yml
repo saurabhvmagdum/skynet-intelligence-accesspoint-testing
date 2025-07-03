@@ -62,7 +62,7 @@ jobs:
       run: supabase login --token $SUPABASE_ACCESS_TOKEN
     
     - name: Link Supabase project
-      run: supabase link --project-ref ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
 
     - name: Create migration file
       run: |
