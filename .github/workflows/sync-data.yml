@@ -96,8 +96,27 @@ jobs:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
         echo "Testing database connection..."
-        psql "$DATABASE_URL" -c "SELECT version();" || {
+        echo "Connection string format: postgresql://username:password@host:port/database"
+        echo "Attempting to connect..."
+        
+        # Test connection with verbose output for debugging
+        psql "$DATABASE_URL" -c "SELECT version();" -v ON_ERROR_STOP=1 || {
           echo "❌ Failed to connect to database"
+          echo ""
+          echo "🔍 Troubleshooting steps:"
+          echo "1. Verify your DATABASE_URL format in GitHub secrets"
+          echo "2. Check if the password contains special characters that need URL encoding"
+          echo "3. Ensure the database user has the correct permissions"
+          echo "4. Verify the connection string from your Supabase dashboard"
+          echo ""
+          echo "📋 Expected format:"
+          echo "postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres"
+          echo ""
+          echo "📋 For Supabase, get the connection string from:"
+          echo "Project Settings > Database > Connection String > URI"
+          echo ""
+          echo "⚠️  Special characters in password may need URL encoding:"
+          echo "@ → %40, # → %23, $ → %24, & → %26, + → %2B, etc."
           exit 1
         }
         echo "✅ Database connection successful"
