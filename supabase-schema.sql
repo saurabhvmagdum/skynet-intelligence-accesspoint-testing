@@ -57,25 +57,11 @@ CREATE POLICY "Allow all operations for authenticated users" ON access_points
 CREATE POLICY "Allow read access for anonymous users" ON access_points
     FOR SELECT USING (true);
 
--- Create a view for easier querying (optional)
-CREATE OR REPLACE VIEW access_points_summary AS
-SELECT 
-    id,
-    subnet_name,
-    description,
-    input_type,
-    output_type,
-    array_length(capabilities, 1) as capability_count,
-    array_length(tags, 1) as tag_count,
-    file_upload,
-    file_download,
-    created_at
-FROM access_points
-ORDER BY created_at DESC;
+
 
 -- Grant necessary permissions (adjust based on your needs)
 GRANT SELECT, INSERT, UPDATE, DELETE ON access_points TO authenticated;
-GRANT SELECT ON access_points_summary TO authenticated;
+
 
 -- Optional: Create a function for full-text search
 CREATE OR REPLACE FUNCTION search_access_points(search_query TEXT)
