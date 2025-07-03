@@ -60,12 +60,16 @@ jobs:
     #   env:
     #     SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
     #   run: supabase login --token $SUPABASE_KEY
+    - name: Link Supabase project
+      run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+      env:
+        SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_KEY }}
 
     - name: Create migration file
       run: |
-          mkdir -p supabase/migrations # Ensure migrations directory exists
+          echo "Creating migration file for access_points table..."
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          MIGRATION_FILE="supabase/migrations/${TIMESTAMP}_init.sql"
+          MIGRATION_FILE="supabase_schema1.sql"
           echo "Creating migration file: $MIGRATION_FILE"
 
           echo "
