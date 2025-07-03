@@ -14,8 +14,7 @@ on:
         type: choice
         options:
           - 'health-check'
-          - 'sync-initial'
-          - 'sync-supabase-to-pinecone'
+          - 'sync-only'
   
   # Trigger on push to main when relevant files are modified
   push:
@@ -25,6 +24,10 @@ on:
       - 'src/dataSyncManager.ts'
       - 'src/pineconeOperations.ts'
       - 'src/supabaseOperations.ts'
+  
+  pull_request:
+    branches:
+      - main
 
 
 jobs:
@@ -85,7 +88,7 @@ jobs:
       run: ts-node src/dataSyncManager.ts
     
     - name: Sync Data
-      if: github.event.inputs.operation == 'sync-initial' || github.event.inputs.operation == 'sync-supabase-to-pinecone' || github.event_name == 'push'
+      if: github.event.inputs.operation == 'sync-only' || github.event_name == 'push'
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}

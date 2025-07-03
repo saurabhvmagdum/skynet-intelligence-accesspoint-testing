@@ -106,7 +106,7 @@ export const accessPointsData: AccessPoint[] = [
     subnetURL: "https://runpodservice-c0n1.stackos.io/natural-request",
   },
   {
-    id: "3dauto-accesspoint",
+    id: "3d-auto-accesspoint",
     subnetID: "4",
     subnetName: "runpod",
     description: "This is for creating and managing 3d image instances",
