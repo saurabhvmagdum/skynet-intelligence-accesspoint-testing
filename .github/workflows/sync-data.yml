@@ -58,8 +58,8 @@ jobs:
 
     - name: Authenticate with Supabase
       env:
-        SUPABASE_SERVICE_ACCOUNT_KEY: ${{ secrets.SUPABASE_KEY }}
-      run: supabase auth login --service-account $SUPABASE_KEY
+        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      run: supabase login --service-key $SUPABASE_KEY
 
     - name: Create migration file
       run: |
