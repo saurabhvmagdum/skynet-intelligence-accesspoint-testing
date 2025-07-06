@@ -10,7 +10,7 @@ dotenv.config();
 class SupabaseOperations {
   private supabase: SupabaseClient;
   private tableName = 'access_points';
-
+ 
   constructor() {
     const supabaseUrl = process.env.DATABASE_URL;
     const supabaseKey = process.env.SUPABASE_KEY;
