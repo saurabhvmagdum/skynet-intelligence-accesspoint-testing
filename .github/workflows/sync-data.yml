@@ -269,7 +269,6 @@ jobs:
         fi
 
     - name: Run Health Check
-      if: github.event.inputs.operation == 'health-check'
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
@@ -291,7 +290,6 @@ jobs:
         echo "✅ Health check completed"
 
     - name: Run Data Sync
-      if: github.event.inputs.operation == 'sync-only' || github.event_name == 'push' || github.event.name == 'pull_request'
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
