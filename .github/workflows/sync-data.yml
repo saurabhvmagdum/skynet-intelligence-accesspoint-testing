@@ -274,6 +274,7 @@ jobs:
         PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
         PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL}}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         echo "Running health check..."
@@ -289,13 +290,14 @@ jobs:
         fi
         
         echo "✅ Health check completed"
-
+ 
     - name: Run Data Sync
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
         PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL}}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         echo "Running data sync..."

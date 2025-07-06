@@ -12,7 +12,7 @@ class SupabaseOperations {
   private tableName = 'access_points';
  
   constructor() {
-    const supabaseUrl = process.env.DATABASE_URL;
+    const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
