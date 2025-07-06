@@ -50,7 +50,7 @@ jobs:
     
     - name: Build TypeScript
       run: npm run build
-      
+       
     - name: Install PostgreSQL Client
       run: |
         sudo apt-get update
