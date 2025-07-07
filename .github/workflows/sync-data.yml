@@ -1,7 +1,7 @@
 # GitHub Actions workflow for creating access_points table in Supabase
 
 name: Sync Access Points 
-
+ 
 on:
   # Trigger manually
   workflow_dispatch:
@@ -83,7 +83,7 @@ jobs:
           echo "✅ PINECONE_INDEX_NAME is set"
         fi
         
-        
+      
         if [ $ERROR_COUNT -gt 0 ]; then
           echo "❌ $ERROR_COUNT environment variable(s) are missing"
           exit 1
@@ -273,9 +273,6 @@ jobs:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
         PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
-        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        SUPABASE_URL: ${{ secrets.SUPABASE_URL}}
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         echo "Running health check..."
         # Test database connection
@@ -296,9 +293,7 @@ jobs:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
         PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
-        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        SUPABASE_URL: ${{ secrets.SUPABASE_URL}}
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+         
       run: |
         echo "Running data sync..."
         if [ -f "src/dataSyncManager.ts" ]; then
