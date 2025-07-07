@@ -189,8 +189,7 @@ class DatabaseOperations {
       const query = `SELECT * FROM ${this.tableName} ORDER BY created_at DESC`;
       const result = await client.query(query);
 
-      const convertedData = result.rows.map((row: any) => this.toCamelCase(row) as AccessPoint);
-
+      const convertedData = result.rows.map(row => this.toCamelCase(row) as AccessPoint);
       return { success: true, data: convertedData };
     } catch (error: any) {
       console.error(`Error getting all access points: ${error.message}`);
@@ -251,7 +250,7 @@ class DatabaseOperations {
       const likePattern = `%${query}%`;
       const result = await client.query(searchQuery, [query, likePattern]);
 
-      const convertedData = result.rows.map((row: any) => this.toCamelCase(row) as AccessPoint);
+      const convertedData = result.rows.map(row => this.toCamelCase(row) as AccessPoint);
       return { success: true, data: convertedData };
     } catch (error: any) {
       console.error(`Error searching access points: ${error.message}`);
