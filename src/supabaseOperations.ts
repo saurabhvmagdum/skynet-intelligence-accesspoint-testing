@@ -1,29 +1,24 @@
-// supabaseOperations.ts - Handle Supabase database operations
+// databaseOperations.ts - Handle PostgreSQL database operations
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Pool, PoolClient } from 'pg';
 import { AccessPoint, APIResponse } from './types';
 import dotenv from 'dotenv';
 dotenv.config();
 
-
-
-class SupabaseOperations {
-  private supabase: SupabaseClient;
+class DatabaseOperations {
+  private pool: Pool;
   private tableName = 'access_points';
 
   constructor() {
-    const supabaseUrl = process.env.DATABASE_URL;
-    const supabaseKey = process.env.SUPABASE_KEY;
+    const databaseUrl = process.env.DATABASE_URL;
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('SUPABASE_URL and SUPABASE_KEY must be set in environment variables.');
+    if (!databaseUrl) {
+      throw new Error('DATABASE_URL must be set in environment variables.');
     }
 
-    this.supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+    this.pool = new Pool({
+      connectionString: databaseUrl,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     });
   }
 
@@ -67,184 +62,273 @@ class SupabaseOperations {
     return newObj;
   }
 
-  // Create access point in Supabase
+  // Build dynamic insert query
+  private buildInsertQuery(data: Record<string, any>): { query: string; values: any[] } {
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    const placeholders = keys.map((_, index) => `$${index + 1}`).join(', ');
+    
+    const query = `
+      INSERT INTO ${this.tableName} (${keys.join(', ')})
+      VALUES (${placeholders})
+      RETURNING *
+    `;
+    
+    return { query, values };
+  }
+
+  // Build dynamic update query
+  private buildUpdateQuery(data: Record<string, any>, id: string): { query: string; values: any[] } {
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    const setClause = keys.map((key, index) => `${key} = $${index + 1}`).join(', ');
+    
+    const query = `
+      UPDATE ${this.tableName}
+      SET ${setClause}
+      WHERE id = $${keys.length + 1}
+      RETURNING *
+    `;
+    
+    return { query, values: [...values, id] };
+  }
+
+  // Create access point in PostgreSQL
   async createAccessPoint(accessPoint: AccessPoint): Promise<APIResponse<AccessPoint>> {
+    let client: PoolClient | null = null;
+    
     try {
+      client = await this.pool.connect();
+      
       const dataToInsert = {
         ...this.toSnakeCase(accessPoint as Record<string, any>),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await this.supabase
-        .from(this.tableName)
-        .insert([dataToInsert])
-        .select()
-        .single();
+      const { query, values } = this.buildInsertQuery(dataToInsert);
+      const result = await client.query(query, values);
 
-      if (error) {
-        console.error(`Supabase insert error: ${error.message}`);
-        return { success: false, error: `Failed to create access point: ${error.message}` };
+      if (result.rows.length === 0) {
+        return { success: false, error: 'Failed to create access point: No data returned' };
       }
 
-      return { success: true, data: this.toCamelCase(data) as AccessPoint };
+      return { success: true, data: this.toCamelCase(result.rows[0]) as AccessPoint };
     } catch (error: any) {
       console.error(`Error creating access point: ${error.message}`);
       return { success: false, error: `Failed to create access point: ${error.message}` };
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   }
 
-  // Update access point in Supabase
+  // Update access point in PostgreSQL
   async updateAccessPoint(id: string, updates: Partial<AccessPoint>): Promise<APIResponse<AccessPoint>> {
+    let client: PoolClient | null = null;
+    
     try {
+      client = await this.pool.connect();
+      
       const dataToUpdate = {
         ...this.toSnakeCase(updates as Record<string, any>),
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await this.supabase
-        .from(this.tableName)
-        .update(dataToUpdate)
-        .eq('id', id)
-        .select()
-        .single();
+      const { query, values } = this.buildUpdateQuery(dataToUpdate, id);
+      const result = await client.query(query, values);
 
-      if (error) {
-        console.error(`Supabase update error: ${error.message}`);
-        return { success: false, error: `Failed to update access point: ${error.message}` };
+      if (result.rows.length === 0) {
+        return { success: false, error: `Access point with id ${id} not found.` };
       }
 
-      return { success: true, data: this.toCamelCase(data) as AccessPoint };
+      return { success: true, data: this.toCamelCase(result.rows[0]) as AccessPoint };
     } catch (error: any) {
       console.error(`Error updating access point: ${error.message}`);
       return { success: false, error: `Failed to update access point: ${error.message}` };
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   }
 
-  // Get access point by ID from Supabase
+  // Get access point by ID from PostgreSQL
   async getAccessPoint(id: string): Promise<APIResponse<AccessPoint>> {
+    let client: PoolClient | null = null;
+    
     try {
-      const { data, error } = await this.supabase
-        .from(this.tableName)
-        .select('*')
-        .eq('id', id)
-        .single();
+      client = await this.pool.connect();
+      
+      const query = `SELECT * FROM ${this.tableName} WHERE id = $1`;
+      const result = await client.query(query, [id]);
 
-      if (error) {
-        console.error(`Supabase get error: ${error.message}`);
-        if (error.code === 'PGRST116') {
-          return { success: false, error: `Access point with id ${id} not found.` };
-        }
-        return { success: false, error: `Failed to get access point: ${error.message}` };
+      if (result.rows.length === 0) {
+        return { success: false, error: `Access point with id ${id} not found.` };
       }
 
-      return { success: true, data: this.toCamelCase(data) as AccessPoint };
+      return { success: true, data: this.toCamelCase(result.rows[0]) as AccessPoint };
     } catch (error: any) {
       console.error(`Error getting access point: ${error.message}`);
       return { success: false, error: `Failed to get access point: ${error.message}` };
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   }
 
-  // Get all access points from Supabase
+  // Get all access points from PostgreSQL
   async getAllAccessPoints(): Promise<APIResponse<AccessPoint[]>> {
+    let client: PoolClient | null = null;
+    
     try {
-      const { data, error } = await this.supabase
-        .from(this.tableName)
-        .select('*')
-        .order('created_at', { ascending: false });
+      client = await this.pool.connect();
+      
+      const query = `SELECT * FROM ${this.tableName} ORDER BY created_at DESC`;
+      const result = await client.query(query);
 
-      if (error) {
-        console.error(`Supabase select error: ${error.message}`);
-        return { success: false, error: `Failed to get all access points: ${error.message}` };
-      }
-
-      const convertedData = data.map(item => this.toCamelCase(item) as AccessPoint);
+      const convertedData = result.rows.map(row => this.toCamelCase(row) as AccessPoint);
       return { success: true, data: convertedData };
     } catch (error: any) {
       console.error(`Error getting all access points: ${error.message}`);
       return { success: false, error: `Failed to get all access points: ${error.message}` };
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   }
 
-  // Delete access point from Supabase
+  // Delete access point from PostgreSQL
   async deleteAccessPoint(id: string): Promise<APIResponse<void>> {
+    let client: PoolClient | null = null;
+    
     try {
-      console.log(`Deleting access point with ID: ${id} from Supabase`);
-      const { error } = await this.supabase
-        .from(this.tableName)
-        .delete()
-        .eq('id', id);
+      console.log(`Deleting access point with ID: ${id} from PostgreSQL`);
+      client = await this.pool.connect();
+      
+      const query = `DELETE FROM ${this.tableName} WHERE id = $1`;
+      const result = await client.query(query, [id]);
 
-      if (error) {
-        console.error(`Supabase delete error: ${error.message}`);
-        return { success: false, error: `Failed to delete access point: ${error.message}` };
+      if (result.rowCount === 0) {
+        return { success: false, error: `Access point with id ${id} not found.` };
       }
 
-      console.log(`Successfully deleted access point with ID: ${id} from Supabase`);
+      console.log(`Successfully deleted access point with ID: ${id} from PostgreSQL`);
       return { success: true };
     } catch (error: any) {
       console.error(`Error deleting access point: ${error.message}`);
       return { success: false, error: `Failed to delete access point: ${error.message}` };
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   }
 
-  // Search access points in Supabase using text search
+  // Search access points in PostgreSQL using text search
   async searchAccessPoints(query: string): Promise<APIResponse<AccessPoint[]>> {
+    let client: PoolClient | null = null;
+    
     try {
-      // Use the search_access_points function defined in the SQL schema
-      const { data, error } = await this.supabase
-        .rpc('search_access_points', { search_query: query })
-        .order('created_at', { ascending: false });
+      client = await this.pool.connect();
+      
+      // Use full-text search or ILIKE for partial matches
+      // This assumes you have a search function or use basic text search
+      const searchQuery = `
+        SELECT * FROM ${this.tableName}
+        WHERE to_tsvector('english', COALESCE(name, '') || ' ' || COALESCE(description, '') || ' ' || COALESCE(location, '')) 
+        @@ plainto_tsquery('english', $1)
+        OR name ILIKE $2
+        OR description ILIKE $2
+        OR location ILIKE $2
+        ORDER BY created_at DESC
+      `;
+      
+      const likePattern = `%${query}%`;
+      const result = await client.query(searchQuery, [query, likePattern]);
 
-      if (error) {
-        console.error(`Supabase search error: ${error.message}`);
-        return { success: false, error: `Failed to search access points: ${error.message}` };
-      }
-
-      const convertedData = data ? data.map((item: Record<string, any>) => this.toCamelCase(item) as AccessPoint) : [];
+      const convertedData = result.rows.map(row => this.toCamelCase(row) as AccessPoint);
       return { success: true, data: convertedData };
     } catch (error: any) {
       console.error(`Error searching access points: ${error.message}`);
       return { success: false, error: `Failed to search access points: ${error.message}` };
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   }
 
-  // Bulk insert access points to Supabase
+  // Bulk insert access points to PostgreSQL
   async bulkInsertAccessPoints(accessPoints: AccessPoint[]): Promise<APIResponse<any>> {
+    let client: PoolClient | null = null;
+    
     try {
+      console.log(`Starting bulk upsert of ${accessPoints.length} access points to PostgreSQL...`);
+      client = await this.pool.connect();
+      
+      // Start transaction
+      await client.query('BEGIN');
+      
       // Convert each access point to snake_case and add timestamps
-      console.log(`Starting bulk upsert of ${accessPoints.length} access points to Supabase...`);
       const dataToInsert = accessPoints.map(ap => ({
         ...this.toSnakeCase(ap as Record<string, any>),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }));
 
-      const { error } = await this.supabase
-        .from(this.tableName)
-        .upsert(dataToInsert, { onConflict: 'id' });
-
-      if (error) {
-        console.error('Supabase bulk insert error:', error);
+      // Build bulk upsert query
+      if (dataToInsert.length > 0) {
+        const firstRow = dataToInsert[0];
+        const columns = Object.keys(firstRow);
+        const placeholders = dataToInsert.map((_, rowIndex) => 
+          `(${columns.map((_, colIndex) => `$${rowIndex * columns.length + colIndex + 1}`).join(', ')})`
+        ).join(', ');
         
-        // Provide more specific error message for RLS policy violations
-        if (error.code === '42501' && error.message.includes('row-level security policy')) {
-          return { 
-            success: false, 
-            error: 'Row-level security policy violation. Please ensure your API key has the necessary permissions.' 
-          };
-        }
+        const values = dataToInsert.flatMap(row => Object.values(row));
         
-        return { success: false, error: `Failed to bulk insert access points: ${error.message}` };
+        const conflictColumns = ['id']; // Assuming 'id' is the conflict column
+        const updateSet = columns
+          .filter(col => !conflictColumns.includes(col))
+          .map(col => `${col} = EXCLUDED.${col}`)
+          .join(', ');
+        
+        const query = `
+          INSERT INTO ${this.tableName} (${columns.join(', ')})
+          VALUES ${placeholders}
+          ON CONFLICT (${conflictColumns.join(', ')}) DO UPDATE SET ${updateSet}
+        `;
+        
+        await client.query(query, values);
       }
-
-      console.log(`Successfully upserted ${dataToInsert.length} access points to Supabase`);
+      
+      // Commit transaction
+      await client.query('COMMIT');
+      
+      console.log(`Successfully upserted ${dataToInsert.length} access points to PostgreSQL`);
       return { success: true };
     } catch (error: any) {
+      // Rollback transaction on error
+      if (client) {
+        await client.query('ROLLBACK');
+      }
+      
       console.error(`Error bulk inserting access points: ${error.message}`);
       return { success: false, error: `Failed to bulk insert access points: ${error.message}` };
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
+  }
+
+  // Close database connections
+  async close(): Promise<void> {
+    await this.pool.end();
   }
 }
 
-export default SupabaseOperations;
+export default DatabaseOperations;
