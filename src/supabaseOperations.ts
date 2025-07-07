@@ -8,7 +8,7 @@ dotenv.config();
 class DatabaseOperations {
   private pool: Pool;
   private tableName = 'access_points';
-
+ 
   constructor() {
     const databaseUrl = process.env.DATABASE_URL;
 
