@@ -5,7 +5,7 @@ export interface AccessPoint {
   subnetID: string;
   subnetName: string;
   description: string;
-  input: string;
+  input: string; 
   output: string;
   inputType: 'text' | 'json' | 'file' | 'image';
   outputType: 'text' | 'json' | 'file' | 'image';
